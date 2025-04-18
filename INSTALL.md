@@ -1,4 +1,3 @@
-````markdown
 # Intelligent Lighting System Installation Guide
 
 ## Environment Requirements
@@ -166,7 +165,8 @@ rm -rf venv && python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
-````
+
+```
 
 ---
 
@@ -179,3 +179,4 @@ pip install -r requirements.txt
 5. **Activation Reminder**: Virtual env activation command in service management table
 
 This template ensures cross-platform consistency while maintaining macOS-specific instructions. All service interactions use standard ports for easier debugging.
+```
