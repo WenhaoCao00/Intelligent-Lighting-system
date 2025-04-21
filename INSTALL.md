@@ -42,6 +42,8 @@ or
 
 manully
 export INFLUX_TOKEN=<INFLUX_TOKEN>
+
+influx query 'from(bucket:"sensor") |> range(start:-1h)'
 ```
 
 ### 3. Data Collector (Telegraf)
@@ -76,6 +78,8 @@ source venv/bin/activate
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+docker-compose up -d
 ```
 
 ## Service Integration
