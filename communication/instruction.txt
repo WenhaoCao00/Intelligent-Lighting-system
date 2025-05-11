@@ -1,0 +1,2 @@
+1. Must turn on the mosquitto
+| Mosquitto  | `brew services start mosquitto`   | `brew services stop mosquitto` |
