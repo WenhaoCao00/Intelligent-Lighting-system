@@ -177,3 +177,5 @@ cython_debug/
 
 config/influxpwd.txt
 config/pwfile
+
+OZW_log.txt
