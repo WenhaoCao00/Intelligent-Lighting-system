@@ -1,7 +1,7 @@
-# 基础镜像
+# image
 FROM python:3.8-slim
 
-# 安装系统依赖
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
@@ -37,17 +37,17 @@ WORKDIR /opt/python-openzwave
 RUN python3 setup.py build --flavor=shared \
     && python3 -m pip install . --no-cache-dir
 
-# 安装 Python 依赖
+# install Python dependencies
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
-# 复制 open-zwave config 目录供运行时使用
+# copy open-zwave config to running python code
 RUN mkdir -p /app/config && cp -r /opt/open-zwave/config/* /app/config/
 
-# 复制应用代码
+# copy entry code
 COPY output_data.py /app/output_data.py
 WORKDIR /app
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
-# 默认启动命令
+# start up order
 CMD ["python3", "output_data.py"]
