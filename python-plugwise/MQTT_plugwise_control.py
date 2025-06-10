@@ -8,7 +8,7 @@ import json
 DEFAULT_PORT = "/dev/ttyUSB0"
 PLUS_MAC = "000D6F0005692B55"  # Circle+ MAC
 MAC = "000D6F0004B1E6C4"       # Circle MAC
-MQTT_BROKER = "localhost"      # Replace with your MQTT broker address
+MQTT_BROKER = "192.168.0.103"      # Replace with your MQTT broker address
 MQTT_PORT = 1883
 MQTT_TOPIC_PLUS = "plugwise/control/plus"  # Topic for Circle+ commands
 MQTT_TOPIC_CIRCLE = "plugwise/control/circle"  # Topic for Circle commands

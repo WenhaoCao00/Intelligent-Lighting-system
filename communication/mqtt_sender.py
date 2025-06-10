@@ -4,7 +4,7 @@ import time
 import random
 
 # MQTT 代理配置
-broker_address = "localhost"  # MQTT 代理地址
+broker_address = "192.168.2.103"  # MQTT 代理地址
 broker_port = 1883           # MQTT 代理端口
 topic = "sensors/iot_simulator"  # 发送到的主题
 
