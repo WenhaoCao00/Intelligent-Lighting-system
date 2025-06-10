@@ -38,7 +38,7 @@ sudo make install
 sudo ldconfig
 
 nano cpp/build/Makefile
-# Remove or comment out -Werror
+Remove or comment out -Werror
 ```
 
 # Build Python-OpenZWave

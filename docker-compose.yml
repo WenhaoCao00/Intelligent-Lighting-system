@@ -17,3 +17,12 @@ services:
       - 3000:3000
     networks:
       - monitoring
+
+  openzwave:
+    build: ./openzwave_service
+    ports:
+      - "5000:5000"
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    networks:
+      - monitoring

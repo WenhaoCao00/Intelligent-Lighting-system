@@ -8,7 +8,8 @@ import time
 
 # 配置串口和OpenZWave路径
 device_name = "/dev/ttyACM0"
-config_path = "/home/wenhaocao/desktop/Intelligent-Lighting-system/open-zwave/config"
+#config_path = "/home/wenhaocao/desktop/Intelligent-Lighting-system/openzwave_service/open-zwave/config"     #in local
+config_path = "/app/config"  # in docker
 
 # 初始化 Z-Wave 选项
 options = ZWaveOption(device_name, config_path=config_path, user_path=".")

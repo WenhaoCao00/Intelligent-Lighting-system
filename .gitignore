@@ -178,4 +178,7 @@ cython_debug/
 config/influxpwd.txt
 config/pwfile
 
-OZW_log.txt
+OZW_Log.txt
+openzwave_service/OZW_Log.txt
+openzwave_service/pyozw.sqlite
+openzwave_service/options.xml
