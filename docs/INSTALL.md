@@ -5,7 +5,7 @@
 - **macOS**
 - **Homebrew** 3.6.0+
 - **Docker** 20.10.0+
-- **Python** 3.9+
+- **Python** 3.8+
 
 ## Dependency Installation
 

@@ -82,4 +82,4 @@ while True:
             if val_obj.label in sensor_labels:
                 print(f"{val_obj.label}: {val_obj.data}")
     print("\n======================\n")
-    time.sleep(30)  # 等待 30 秒继续轮询
+    time.sleep(10)  # 等待 30 秒继续轮询
