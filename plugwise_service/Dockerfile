@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir \
         paho-mqtt
 
 WORKDIR /app
-COPY manully_plugwise_control.py .
+COPY mqtt_sender_test.py .
 
-CMD ["/bin/bash"]
+#CMD ["/bin/bash"]
+CMD ["python", "mqtt_sender_test.py"]

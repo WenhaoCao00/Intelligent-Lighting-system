@@ -35,3 +35,19 @@ services:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
     networks:
       - monitoring
+
+  mqtt-listener:
+    build: ./mqtt_listener_service
+    networks:
+      - monitoring
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    ports:
+      - "1883:1883" # TCP
+      - "9001:9001" # WebSocket
+    volumes:
+      - ./mosquitto_service/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - monitoring
