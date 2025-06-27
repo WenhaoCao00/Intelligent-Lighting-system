@@ -1,35 +1,43 @@
 # Home‑Automation Monitoring Stack
 
-A Docker Compose stack that bundles Plugwise smart‑plug control, an OpenZWave REST API, and a lightweight monitoring suite (InfluxDB 2.3 + Grafana 9.0).
+A **Docker Compose** stack combining:
+
+- **Mosquitto** – lightweight MQTT broker
+- **OpenZWave** REST API – exposes your Z‑Wave network over HTTP
+- **Plugwise** service – Python helper to control Plugwise smart plugs
+- **InfluxDB 2.3 + Grafana 9.0** – time‑series storage & dashboards
+
+All containers share a single **monitoring** network, so they can discover each other by service‑name.
 
 ---
 
 ## Prerequisites
 
-| Requirement | Notes |
-| ----------- | ----- |
-|             |       |
+| Requirement                       | Version ≥ | Notes                                                                            |
+| --------------------------------- | --------- | -------------------------------------------------------------------------------- |
+| **Docker Engine**                 | 20.x      | <https://docs.docker.com/engine/>                                                |
+| **docker‑compose** (v1 or Plugin) | 1.29      | <https://docs.docker.com/compose/>                                               |
+| **Hardware**                      | –         | • Z‑Wave USB stick → **/dev/ttyACM0**<br>• Plugwise USB stick → **/dev/ttyUSB0** |
 
-| **Docker Engine 20+**                             | [https://docs.docker.com/engine/](https://docs.docker.com/engine/)                             |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **docker‑compose v1.29+ (or the Compose Plugin)** | [https://docs.docker.com/compose/](https://docs.docker.com/compose/)                           |
-| **Hardware**                                      | • Z‑Wave USB stick exposed as **/dev/ttyACM0**• Plugwise USB stick exposed as **/dev/ttyUSB0** |
-
-> 🛡️ **Linux:** be sure your user has read/write access to the serial devices (usually by adding the user to the `dialout` group).**Windows WSL 2:** enable [USBIPD‑win](https://github.com/dorssel/usbipd-win) and attach the devices to the distro.
+> **Linux:** add your user to the `dialout` (or similar) group to access the serial devices.  
+> **WSL 2:** enable [USBIPD‑win](https://github.com/dorssel/usbipd-win) and attach the devices to the distro.
 
 ---
 
-## Project structure
+## Project layout
 
 ```text
 .
-├── docker-compose.yml          # Service definitions
-├── openzwave_service/          # OpenZWave REST image
+├── docker-compose.yml
+├── openzwave_service/
 │   └── Dockerfile
-├── plugwise_service/           # Plugwise control image
+├── plugwise_service/
 │   ├── Dockerfile
 │   └── manully_plugwise_control.py
-└── README.md                   # This file
+├── mqtt_listener_service/
+│   ├── Dockerfile
+│   └── mqtt_listener.py
+└── README.md   ← you are here
 ```
 
 ---
@@ -37,77 +45,79 @@ A Docker Compose stack that bundles Plugwise smart‑plug control, an OpenZWave
 ## Quick start
 
 ```bash
-# 1. Clone the repo
-git clone <your-repo-url> home-automation-stack && cd home-automation-stack
+# 1 — clone & enter
+git clone https://github.com/WenhaoCao00/Intelligent-Lighting-system.git Intelligent-Lighting-system
+cd Intelligent-Lighting-system
 
-# 2. Build and start all services in the background
+# 2 — build and launch the whole stack
 docker-compose up --build -d
 
-# 3. Wait a few seconds for the containers to become healthy
+# 3 — wait a few seconds until all services are healthy
 ```
 
-### Port overview
+### Exposed ports / credentials
 
-| Service           | URL                                            | Default credentials                                  |
-| ----------------- | ---------------------------------------------- | ---------------------------------------------------- |
-| **Grafana**       | [http://localhost:3000](http://localhost:3000) | `admin / admin` (you will be asked to change it)     |
-| **InfluxDB UI**   | [http://localhost:8086](http://localhost:8086) | Create Organisation, Bucket and Token on first visit |
-| **OpenZWave API** | [http://localhost:5000](http://localhost:5000) | Swagger docs are available at the root path          |
+| Service           | URL                                                         | Default login                                  |
+| ----------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| **Grafana**       | <http://localhost:3000>                                     | `admin / admin` (change on first login)        |
+| **InfluxDB UI**   | <http://localhost:8086>                                     | Create **Org / Bucket / Token** on first visit |
+| **Mosquitto**     | `mqtt://localhost:1883` (TCP)<br>`ws://localhost:9001` (WS) | –                                              |
+| **OpenZWave API** | <http://localhost:5000>                                     | Swagger docs at `/`                            |
 
 ---
 
-## Usage examples
+## Usage snippets
 
-### 1. Verify that the serial devices are mapped
+### 1 — Check serial mapping
 
 ```bash
-# Z‑Wave
-docker-compose exec openzwave ls -l /dev/ttyACM0
-
-# Plugwise
-docker-compose exec plugwise ls -l /dev/ttyUSB0
+docker-compose exec openzwave ls -l /dev/ttyACM0   # Z‑Wave stick
+docker-compose exec plugwise  ls -l /dev/ttyUSB0   # Plugwise stick
 ```
 
-### 2. Manually toggle a Plugwise Circle
+### 2 — Toggle a Plugwise Circle manually
 
 ```bash
-# Open an interactive shell in the container
 docker-compose exec plugwise bash
-
-# Run the control script (toggles relay on/off)
 python manully_plugwise_control.py
 ```
 
-The script will:
+The script:
 
-1. Synchronise the Circle / Circle+ clock to the container time
-2. Read the current relay state
-3. Flip the state (on → off / off → on)
+1. Syncs the Circle / Circle+ clock
+2. Reads current relay state
+3. Flips the relay
 
-### 3. Import dashboards into Grafana
+### 3 — Subscribe to Z‑Wave sensor data
 
-1. Log in to Grafana → **Connections → Data sources** → add **InfluxDB** with URL `http://influxdb:8086`, your Org and Token.
-2. Go to **Dashboards → New → Import**, paste a JSON model or upload a file to visualise Z‑Wave sensors, Plugwise power usage, etc.
+The `mqtt_listener_service` container runs Mosquitto **and** a Python subscriber that prints every message on `zwave/sensor_data`.
+
+Publish from anywhere:
+
+```bash
+mosquitto_pub -h localhost -t zwave/sensor_data -m '{"hello":"world"}'
+```
 
 ---
 
 ## Customisation
 
-| Need                    | How                                                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Persist data**        | Add `volumes:` to the `influxdb` and `grafana` services:` - ./data/influxdb:/var/lib/influxdb2``- ./data/grafana:/var/lib/grafana ` |
-| **Change serial paths** | Replace `/dev/ttyACM0` and `/dev/ttyUSB0` in `devices:` with your actual paths                                                      |
-| **Upgrade images**      | `docker-compose pull` or modify a `Dockerfile`, then `docker-compose up --build`                                                    |
+| Need                                | How                                                                                                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Persist InfluxDB / Grafana data** | Mount host volumes:<br>`influxdb:`<br>&nbsp;&nbsp;`- ./data/influxdb:/var/lib/influxdb2`<br>`grafana:`<br>&nbsp;&nbsp;`- ./data/grafana:/var/lib/grafana` |
+| **Change serial paths**             | Edit `devices:` lines in `docker-compose.yml`                                                                                                             |
+| **Expose extra MQTT ports**         | Add more `ports:` mappings under **mosquitto**                                                                                                            |
+| **Upgrade images**                  | `docker-compose pull` or modify a **Dockerfile**, then `docker-compose up --build`                                                                        |
 
 ---
 
 ## Shutdown & cleanup
 
 ```bash
-# Stop and remove containers, keep volumes
+# Stop & remove containers (volumes intact)
 docker-compose down
 
-# Remove volumes as well
+# …or nuke everything including volumes
 docker-compose down -v
 ```
 
@@ -115,4 +125,4 @@ docker-compose down -v
 
 ## License
 
-Released under the **MIT License**. See `LICENSE` for details.
+Released under the **MIT License** – see [`LICENSE`](LICENSE) for details.
