@@ -48,6 +48,6 @@ services:
       - "1883:1883" # TCP
       - "9001:9001" # WebSocket
     volumes:
-      - ./mosquitto_service/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:
       - monitoring

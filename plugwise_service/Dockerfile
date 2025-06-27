@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# 安装 plugwise 以及 paho-mqtt
+# install plugwise and paho-mqtt
 RUN pip install --no-cache-dir \
         git+https://github.com/aequitas/python-plugwise.git \
         paho-mqtt

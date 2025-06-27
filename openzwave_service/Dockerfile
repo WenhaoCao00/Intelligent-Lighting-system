@@ -3,7 +3,7 @@
 ###########################
 FROM python:3.8-slim AS builder
 
-# —— 构建依赖 —— #
+# —— build dependencies —— #
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git build-essential libudev-dev libusb-1.0-0-dev libyaml-dev \
         cython3 python3-dev pkg-config \
@@ -34,26 +34,26 @@ RUN git clone https://github.com/OpenZWave/python-openzwave.git /opt/python-open
 ###########################
 FROM python:3.8-slim
 
-# —— 仅安装运行期必需库 —— #
+# —— install lib —— #
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libudev1 libusb-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# —— 把构建产物拷过来 —— #
-# 1. 复制 /usr/local（只含 openzwave 相关 .so 和 site-packages）
+# —— copy builder —— #
+# 1. copy /usr/local（only include openzwave related .so and site-packages）
 COPY --from=builder /usr/local /usr/local
 
-# 2. 复制 OpenZWave 配置目录
+# 2. copy OpenZWave config
 COPY --from=builder /opt/open-zwave/config /app/config
 
-# —— 软链兼容 libopenzwave.so.1.4 ←→ 1.6 —— #
+# —— libopenzwave.so.1.4 ←→ 1.6 —— #
 RUN set -e; \
     for d in /usr/local/lib /usr/local/lib64; do \
         [ -f "$d/libopenzwave.so.1.6" ] && \
         ln -sf "$d/libopenzwave.so.1.6" "$d/libopenzwave.so.1.4" || true; \
     done && ldconfig
 
-# —— 业务依赖 & 代码 —— #
+# code
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt --no-cache-dir
 COPY output_data.py /app/output_data.py
