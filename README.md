@@ -24,24 +24,6 @@ All containers share a single **monitoring** network, so they can discover each 
 
 ---
 
-## Project layout
-
-```text
-.
-├── docker-compose.yml
-├── openzwave_service/
-│   └── Dockerfile
-├── plugwise_service/
-│   ├── Dockerfile
-│   └── manully_plugwise_control.py
-├── mqtt_listener_service/
-│   ├── Dockerfile
-│   └── mqtt_listener.py
-└── README.md   ← you are here
-```
-
----
-
 ## Quick start
 
 ```bash
