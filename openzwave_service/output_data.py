@@ -6,6 +6,7 @@ import time
 import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
+import os
 
 # setting device_name and OpenZWave path( in docker)
 device_name = "/dev/ttyACM0"
@@ -25,7 +26,7 @@ logging.basicConfig(
 
 # MQTT client init
 mqtt_client = mqtt.Client()
-mqtt_broker = "mosquitto"
+mqtt_broker = os.getenv("MQTT_BROKER", "mosquitto")
 mqtt_port = 1883
 mqtt_topic = "zwave/sensor_data"
 

@@ -6,6 +6,8 @@ networks:
 volumes:
   influxdb-data:
     name: influxdb-data
+  grafana-data:
+    name: grafana-data
 
 services:
   influxdb:
@@ -15,6 +17,8 @@ services:
     volumes:
       - influxdb-data:/var/lib/influxdb2
       - influxdb-data:/etc/influxdb2
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
     networks:
       - monitoring
 
@@ -25,6 +29,7 @@ services:
       - mosquitto
     environment:
       - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - MQTT_BROKER=${MQTT_BROKER}
     volumes:
       - ./config/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     networks:
@@ -34,6 +39,10 @@ services:
     image: grafana/grafana:9.0.4
     ports:
       - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
     networks:
       - monitoring
 
@@ -41,6 +50,8 @@ services:
     build: ./openzwave_service
     ports:
       - "5000:5000"
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
     devices:
       - "/dev/ttyACM0:/dev/ttyACM0"
     networks:
@@ -52,6 +63,8 @@ services:
     stdin_open: true
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
     networks:
       - monitoring
 
@@ -59,6 +72,8 @@ services:
     build: ./mqtt_listener_service
     networks:
       - monitoring
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
 
   mosquitto:
     image: eclipse-mosquitto:2.0

@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir \
         paho-mqtt
 
 WORKDIR /app
-COPY mqtt_sender_test.py .
+COPY on_and_off_MQTT.py .
 
 #CMD ["/bin/bash"]
-CMD ["python", "mqtt_sender_test.py"]
+CMD ["python", "on_and_off_MQTT.py"]

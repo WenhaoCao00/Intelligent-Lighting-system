@@ -184,3 +184,4 @@ openzwave_service/pyozw.sqlite
 openzwave_service/options.xml
 *.bak
 mqtt_listener_service/
+mosquitto_pub

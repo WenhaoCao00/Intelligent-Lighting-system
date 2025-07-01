@@ -14,6 +14,12 @@ sleep(1)
 
 state = circle.get_info()
 print(state)
+
+power_usage_history = circle.get_power_usage_history()
+print(power_usage_history)
+
+power_usage = circle.get_power_usage()
+print(power_usage)
 # toggle switch
 if state["relay_state"] == 1:
     print("Now turning off...")
