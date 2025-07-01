@@ -2,12 +2,12 @@
   (:requirements :strips)
 
   (:predicates
-    (dark)          ;; 亮度 < 100 lux
-    (light-on)      ;; 灯已打开
+    (dark)          
+    (light-on)      
   )
 
   (:action turn-on
-    :parameters ()              ;; 无参数也要给空列表
+    :parameters ()              
     :precondition (dark)
     :effect (and
       (light-on)
