@@ -85,3 +85,14 @@ services:
       - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:
       - monitoring
+
+  planner:
+    build: ./planner
+    networks:
+      - monitoring
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
+      - INFLUX_URL=${INFLUX_URL}
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_ORG=${INFLUX_ORG}
+      - INFLUX_BUCKET=${INFLUX_BUCKET}
