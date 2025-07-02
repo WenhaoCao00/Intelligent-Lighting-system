@@ -41,6 +41,8 @@ services:
       - 3000:3000
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
     environment:
       - MQTT_BROKER=${MQTT_BROKER}
     networks:
