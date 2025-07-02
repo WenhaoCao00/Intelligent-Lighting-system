@@ -11,8 +11,7 @@ Plugwise MQTT controller
 from plugwise.api import Stick, Circle
 from datetime import datetime
 import paho.mqtt.client as mqtt
-import json
-import traceback
+import json, traceback, os, threading
 from time import sleep
 import os
 
@@ -27,6 +26,8 @@ MQTT_ID             = "plugwise_controller"
 
 TOPIC_PLUS          = "plugwise/control/plus"
 TOPIC_CIRCLE        = "plugwise/control/circle"
+TOPIC_PLUS_ENERGY   = "plugwise/status/plus"
+TOPIC_CIRCLE_ENERGY = "plugwise/status/circle"
 # ───────────────────────────────────────────────────────────────
 
 # Init Plugwise stick & devices
@@ -38,6 +39,40 @@ now = datetime.now()
 circle_plus.set_clock(now)
 circle.set_clock(now)
 
+# ───────────────────────  Report Energy ─────────────────────────────
+def publish_energy(device: Circle, topic: str, name: str):
+    try:
+        power_w = device.get_power_usage()
+        payload = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "power": round(power_w, 2)           
+        }
+        client.publish(topic, json.dumps(payload), qos=0)
+    except Exception as e:
+        print(f"Read {name} energy fail: {e}")
+
+def energy_report_loop():
+    while True:
+        publish_energy(circle_plus,  TOPIC_PLUS_ENERGY,   "Circle+")
+        publish_energy(circle,       TOPIC_CIRCLE_ENERGY, "Circle")
+        sleep(10)
+
+threading.Thread(target=energy_report_loop, daemon=True).start()
+
+# ───────────────────────  Read Day Energy use  ─────────────────────────────
+def read_day_energy(device: Circle):
+    info = device.get_info()
+    current_idx = info['last_logaddr']      
+    total_wh = 0.0
+
+    # 24 小时 = 6 个 log buffer（4 h × 6 = 24 h）
+    for i in range(6):
+        idx = (current_idx - i) % 168          
+        for dt, wh in device.get_power_usage_history(idx):
+            if dt is not None:                  
+                total_wh += wh
+
+    return total_wh / 1000                    
 # ───────────────────────  Helper  ─────────────────────────────
 def handle_switch(device: Circle, turn_on: bool, name: str):
     """Switch device on/off if state differs."""
@@ -57,9 +92,9 @@ def handle_switch(device: Circle, turn_on: bool, name: str):
 
 # ───────────────────────  MQTT callbacks  ─────────────────────
 def on_connect(client, *_):
-    print("✓ Connected to MQTT broker")
+    print("Connected to MQTT broker")
     client.subscribe([(TOPIC_PLUS, 0), (TOPIC_CIRCLE, 0)])
-    print(f"✓ Subscribed to {TOPIC_PLUS} & {TOPIC_CIRCLE}")
+    print(f"Subscribed to {TOPIC_PLUS} & {TOPIC_CIRCLE}")
 
 def on_message(client, _userdata, msg):
     try:
@@ -72,7 +107,7 @@ def on_message(client, _userdata, msg):
         elif topic == TOPIC_CIRCLE:
             device, name = circle, "Circle"
         else:
-            print(f"⚠ Unknown topic {topic}")
+            print(f"Unknown topic {topic}")
             return
 
         if action == "on":
@@ -80,10 +115,10 @@ def on_message(client, _userdata, msg):
         elif action == "off":
             handle_switch(device, False, name)
         else:
-            print(f"⚠ Unknown action '{action}' on {topic}")
+            print(f"Unknown action '{action}' on {topic}")
 
     except Exception as e:
-        print(f"✗ Error processing message on {msg.topic}: {e}")
+        print(f"Error processing message on {msg.topic}: {e}")
         traceback.print_exc()
 
 # ─────────────────────────  MQTT init  ────────────────────────
@@ -91,9 +126,8 @@ client = mqtt.Client(client_id=MQTT_ID, clean_session=True)
 client.on_connect  = on_connect
 client.on_message  = on_message
 
-# 自动重连回退：首次 1s，随后 max 120s
 client.reconnect_delay_set(min_delay=1, max_delay=120)
 
 client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-print("… waiting for MQTT messages")
-client.loop_forever()        # 阻塞运行，自动重连
+print("waiting for MQTT messages")
+client.loop_forever()

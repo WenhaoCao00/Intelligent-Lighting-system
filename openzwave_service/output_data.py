@@ -12,7 +12,7 @@ import os
 device_name = "/dev/ttyACM0"
 config_path = "/app/config"  # in docker
 
-# 初始化 Z-Wave 选项
+# Init Z-Wave
 options = ZWaveOption(device_name, config_path=config_path, user_path=".")
 options.set_console_output(False)
 options.lock()
@@ -33,7 +33,7 @@ mqtt_topic = "zwave/sensor_data"
 try:
     mqtt_client.connect(mqtt_broker, mqtt_port)
 except Exception as e:
-    logging.error(f"无法连接 MQTT broker: {e}")
+    logging.error(f"cannot connect MQTT broker: {e}")
     exit(1)
 
 # init Z-wave
