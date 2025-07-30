@@ -5,27 +5,28 @@ def get_current_luminance():
     url     = os.environ["INFLUX_URL"]
     token   = os.environ["INFLUX_TOKEN"]
     org     = os.environ["INFLUX_ORG"]
-    bucket  = "zwave"                    
+    bucket  = "zwave"
 
     flux_query = f'''
     from(bucket: "{bucket}")
-      |> range(start: -5s)                              
+      |> range(start: -2h)
       |> filter(fn: (r) =>
           r._measurement == "sensor_data" and
           r._field == "luminance" and
           r.topic == "zwave/sensor_data"
       )
-      |> aggregateWindow(every: 1s, fn: mean, createEmpty: false)
-      |> last()                                        
+      |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+      |> last()
     '''
 
     with InfluxDBClient(url=url, token=token, org=org) as client:
         tables = client.query_api().query(org=org, query=flux_query)
         for table in tables:
             for record in table.records:
+                print(">>> Got record:", record)
                 return float(record.get_value())
 
-    # if no data,return None
+    print(">>> No luminance data found.")
     return None
 
 
@@ -37,14 +38,15 @@ def get_current_ultraviolet():
 
     flux_query = f'''
     from(bucket: "{bucket}")
-      |> range(start: -5s)                              
-      |> filter(fn: (r) =>
-          r._measurement == "sensor_data" and
-          r._field == "ultraviolet" and
-          r.topic == "zwave/sensor_data"
-      )
-      |> aggregateWindow(every: 1s, fn: mean, createEmpty: false)
-      |> last()                                        
+        |> range(start: -2h)                           // last 2 hours
+        |> filter(fn: (r) =>
+            r._measurement == "sensor_data" and        // measurement
+            r._field == "ultraviolet" and                // field
+            r.topic == "zwave/sensor_data"             // MQTT topic
+        )
+        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average
+        |> last()
+                                  
     '''
 
     with InfluxDBClient(url=url, token=token, org=org) as client:
@@ -89,11 +91,11 @@ def _get_current_power(topic: str,
     return None
 
 
-# 插座 1：Circle+ ───────────────────────────────────────
+# Plugwsie 1：Circle+ ───────────────────────────────────────
 def get_power_circle_plus() -> float | None:
     return _get_current_power(topic="plugwise/status/plus")
 
 
-# 插座 2：Circle ───────────────────────────────────────
+# Plugwise 2：Circle ───────────────────────────────────────
 def get_power_circle() -> float | None:
     return _get_current_power(topic="plugwise/status/circle")

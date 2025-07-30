@@ -93,7 +93,7 @@ services:
     networks:
       - monitoring
     environment:
-      - PLANNER=/usr/games/fast-downward
+      - PLANNER=/usr/local/bin/fast-downward
       - MQTT_BROKER=${MQTT_BROKER}
       - INFLUX_URL=${INFLUX_URL}
       - INFLUX_TOKEN=${INFLUX_TOKEN}
