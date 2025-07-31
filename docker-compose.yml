@@ -64,9 +64,10 @@ services:
     tty: true
     stdin_open: true
     devices:
-      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "${DEFAULT_PORT_PLUGWISE}:${DEFAULT_PORT_PLUGWISE}"
     environment:
       - MQTT_BROKER=${MQTT_BROKER}
+      - DEFAULT_PORT_PLUGWISE=${DEFAULT_PORT_PLUGWISE}
     networks:
       - monitoring
 

@@ -33,7 +33,6 @@
         "type": "influxdb",
         "uid": "XXvZlWyHk"
       },
-      "description": "Real-Time Luminance",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -90,6 +89,93 @@
         "x": 0,
         "y": 0
       },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "XXvZlWyHk"
+          },
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -2h)                           // last 2 hours\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and        // measurement\r\n      r._field == \"power\" and                // field\r\n      r.topic == \"plugwise/status/plus\"             // MQTT topic\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average\r\n  |> yield(name: \"plugwise_plus_power\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Plugwise_plus Power",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "XXvZlWyHk"
+      },
+      "description": "Real-Time Luminance",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "id": 2,
       "options": {
         "legend": {
@@ -113,6 +199,92 @@
         }
       ],
       "title": "Luminance",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "XXvZlWyHk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "XXvZlWyHk"
+          },
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -2h)                           // last 2 hours\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and        // measurement\r\n      r._field == \"power\" and                // field\r\n      r.topic == \"plugwise/status/circle\"             // MQTT topic\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average\r\n  |> yield(name: \"plugwise_plus_power\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Plugwise Power",
       "type": "timeseries"
     },
     {
@@ -191,7 +363,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 8
       },
       "id": 4,
       "options": {
@@ -219,7 +391,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "10s",
+  "refresh": false,
   "schemaVersion": 36,
   "style": "dark",
   "tags": ["zwave", "sensor", "mqtt"],
@@ -227,13 +399,13 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Z-Wave Sensor Dashboard",
   "uid": "zwave-sensors",
-  "version": 4,
+  "version": 6,
   "weekStart": ""
 }

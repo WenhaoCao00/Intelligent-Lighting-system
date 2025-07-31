@@ -16,7 +16,7 @@ from time import sleep
 import os
 
 # ──────────────────────────  CONFIG  ──────────────────────────
-DEFAULT_PORT        = "/dev/ttyUSB0"
+DEFAULT_PORT        = os.getenv("DEFAULT_PORT_PLUGWISE")
 PLUS_MAC            = "000D6F0005692B55"
 CIRCLE_MAC          = "000D6F0004B1E6C4"
 
@@ -33,28 +33,36 @@ TOPIC_CIRCLE_ENERGY = "plugwise/status/circle"
 # Init Plugwise stick & devices
 stick        = Stick(DEFAULT_PORT)
 circle_plus  = Circle(PLUS_MAC, stick)
-circle       = Circle(CIRCLE_MAC, stick)
+# circle       = Circle(CIRCLE_MAC, stick)
 
 now = datetime.now()
 circle_plus.set_clock(now)
-circle.set_clock(now)
+# circle.set_clock(now)
 
 # ───────────────────────  Report Energy ─────────────────────────────
 def publish_energy(device: Circle, topic: str, name: str):
     try:
-        power_w = device.get_power_usage()
+        state = device.get_info()
+        power_w = 0.0
+        if state["relay_state"] == 1:
+            power_w = device.get_power_usage()
+        else:
+            power_w = 0.0
         payload = {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "power": round(power_w, 2)           
         }
+        print(payload)
         client.publish(topic, json.dumps(payload), qos=0)
+        
+        
     except Exception as e:
         print(f"Read {name} energy fail: {e}")
 
 def energy_report_loop():
     while True:
         publish_energy(circle_plus,  TOPIC_PLUS_ENERGY,   "Circle+")
-        publish_energy(circle,       TOPIC_CIRCLE_ENERGY, "Circle")
+        # publish_energy(circle,       TOPIC_CIRCLE_ENERGY, "Circle")
         sleep(10)
 
 threading.Thread(target=energy_report_loop, daemon=True).start()
