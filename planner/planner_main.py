@@ -17,7 +17,6 @@ def run_planner():
         print("我准备开灯")
     else:
         print(get_current_luminance())
-        print(get_current_ultraviolet())
         print("不需要开灯")
 
 if __name__ == "__main__":
