@@ -119,39 +119,10 @@
         "type": "influxdb",
         "uid": "XXvZlWyHk"
       },
-      "description": "Real-Time Luminance",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "continuous-GrYlRd"
           },
           "mappings": [],
           "thresholds": {
@@ -176,30 +147,50 @@
         "x": 12,
         "y": 0
       },
-      "id": 2,
+      "id": 10,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showUnfilled": true
       },
+      "pluginVersion": "9.0.4",
       "targets": [
         {
           "datasource": {
             "type": "influxdb",
             "uid": "XXvZlWyHk"
           },
-          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -2h)                           // last 2 hours\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"sensor_data\" and        // measurement\r\n      r._field == \"luminance\" and                // field\r\n      r.topic == \"zwave/sensor_data\"             // MQTT topic\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average\r\n  |> yield(name: \"luminance\")\r\n",
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -10m)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_10_min_kWh\"}) \r\n",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "XXvZlWyHk"
+          },
+          "hide": false,
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -1h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_1_hour_kWh\"}) \r\n",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "XXvZlWyHk"
+          },
+          "hide": false,
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -24h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)              // Wh\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_24_hour_kWh\"}) \r\n",
+          "refId": "C"
         }
       ],
-      "title": "Luminance",
-      "type": "timeseries"
+      "title": "Total Power Usage",
+      "type": "bargauge"
     },
     {
       "datasource": {
@@ -292,7 +283,7 @@
         "type": "influxdb",
         "uid": "XXvZlWyHk"
       },
-      "description": "real-time Ultraviolet",
+      "description": "Real-Time Luminance",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -331,7 +322,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "yellow",
+                "color": "green",
                 "value": null
               },
               {
@@ -341,23 +332,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ultraviolet {host=\"fd1bf8279f6b\", topic=\"zwave/sensor_data\"}"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -365,7 +340,7 @@
         "x": 12,
         "y": 8
       },
-      "id": 4,
+      "id": 2,
       "options": {
         "legend": {
           "calcs": [],
@@ -383,15 +358,15 @@
             "type": "influxdb",
             "uid": "XXvZlWyHk"
           },
-          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -2h)                           // last 2 hours\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"sensor_data\" and        // measurement\r\n      r._field == \"ultraviolet\" and                // field\r\n      r.topic == \"zwave/sensor_data\"             // MQTT topic\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average\r\n  |> yield(name: \"ultraviolet\")\r\n",
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -2h)                           // last 2 hours\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"sensor_data\" and        // measurement\r\n      r._field == \"luminance\" and                // field\r\n      r.topic == \"zwave/sensor_data\"             // MQTT topic\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)   // 10-s average\r\n  |> yield(name: \"luminance\")\r\n",
           "refId": "A"
         }
       ],
-      "title": "Ultraviolet",
+      "title": "Luminance",
       "type": "timeseries"
     }
   ],
-  "refresh": false,
+  "refresh": "10s",
   "schemaVersion": 36,
   "style": "dark",
   "tags": ["zwave", "sensor", "mqtt"],
@@ -399,13 +374,13 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Z-Wave Sensor Dashboard",
   "uid": "zwave-sensors",
-  "version": 6,
+  "version": 8,
   "weekStart": ""
 }

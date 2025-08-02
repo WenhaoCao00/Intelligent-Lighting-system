@@ -87,7 +87,7 @@ while True:
             label = val_obj.label
             data = val_obj.data
 
-            if label in ["Luminance", "Ultraviolet"]:
+            if label in ["Luminance"]:
                 if isinstance(data, (int, float)):
                     payload[label] = data 
 

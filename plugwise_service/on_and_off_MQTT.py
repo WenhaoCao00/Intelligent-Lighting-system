@@ -67,20 +67,6 @@ def energy_report_loop():
 
 threading.Thread(target=energy_report_loop, daemon=True).start()
 
-# ───────────────────────  Read Day Energy use  ─────────────────────────────
-def read_day_energy(device: Circle):
-    info = device.get_info()
-    current_idx = info['last_logaddr']      
-    total_wh = 0.0
-
-    # 24 小时 = 6 个 log buffer（4 h × 6 = 24 h）
-    for i in range(6):
-        idx = (current_idx - i) % 168          
-        for dt, wh in device.get_power_usage_history(idx):
-            if dt is not None:                  
-                total_wh += wh
-
-    return total_wh / 1000                    
 # ───────────────────────  Helper  ─────────────────────────────
 def handle_switch(device: Circle, turn_on: bool, name: str):
     """Switch device on/off if state differs."""
