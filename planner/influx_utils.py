@@ -15,6 +15,7 @@ def get_current_luminance():
           r._field == "luminance" and
           r.topic == "zwave/sensor_data"
       )
+      |> group(columns: ["topic"])   
       |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
       |> last()
     '''
@@ -23,7 +24,7 @@ def get_current_luminance():
         tables = client.query_api().query(org=org, query=flux_query)
         for table in tables:
             for record in table.records:
-                print(">>> Got record:", record)
+                # print(">>> Got record:", record)
                 return float(record.get_value())
 
     print(">>> No luminance data found.")
