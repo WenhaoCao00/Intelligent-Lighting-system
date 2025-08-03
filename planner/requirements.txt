@@ -1,2 +1,3 @@
 influxdb-client
 paho-mqtt>=1.6.1
+pyperplan==2.1       # 纯 Python PDDL Planner

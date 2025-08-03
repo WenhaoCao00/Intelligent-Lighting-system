@@ -1,103 +1,52 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-每 10 秒：
-  1. 从数据库取当前亮度 (lux_now)
-  2. 生成 problem.pddl
-  3. 调 fast-downward 规划 -> 得到 TURN-ON / TURN-OFF / 空计划
-  4. 仅打印“开灯 / 关灯 / 无动作”，并更新本地灯状态标记
-"""
-
-import os, re, subprocess, time
+import subprocess, re, logging
 from pathlib import Path
-from datetime import datetime
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
-# ---------- ★ 需要你自己实现 / 修改 ★ ----------
-from influx_utils import get_current_luminance  # 返回 float lux
-# ------------------------------------------------
+STEP_RE = re.compile(r"\(\s*([^) ]+)\s*", re.I)
 
-PLANNER = os.getenv("PLANNER", "/usr/local/bin/fast-downward")
-DOMAIN  = "domain.pddl"
-PROBLEM = "problem.pddl"
-
-LOW   = 100          # lux，低于→开灯
-HIGH  = 300          # lux，高于→关灯
-STEP  = 200          # 必须与 domain.pddl 的 increase/decrease 一致
-
-# ----------------- 本地灯状态（仅打印用） -----------------
-lamp_state = False   # False=关, True=开
-
-def lamp_is_on() -> bool:
-    return lamp_state
-
-def lamp_on():
-    global lamp_state
-    lamp_state = True
-    print(">>> 执行动作：开灯", flush=True)
-
-def lamp_off():
-    global lamp_state
-    lamp_state = False
-    print(">>> 执行动作：关灯", flush=True)
-# --------------------------------------------------------
-
-_PROBLEM_TMPL = """
-(define (problem lighting-{ts})
-  (:domain smart-lighting)
-  (:init
-    (= (lum) {lux})
-    {lamp}
-  )
-  (:goal (and (>= (lum) {low}) (<= (lum) {high})))
+def build_problem(lux_now: int):
+    is_dark = lux_now < 100
+    init_parts = ["(dark)" if is_dark else "(lamp-on)"]
+    pddl = f"""
+(define (problem light-problem)
+  (:domain light-control)
+  (:init {' '.join(init_parts)})
+  (:goal (lamp-on))
 )
 """.strip()
+    Path("problem.pddl").write_text(pddl)
 
-def build_problem(lux: int, lamp_on_flag: bool):
-    Path(PROBLEM).write_text(
-        _PROBLEM_TMPL.format(
-            ts   = datetime.utcnow().isoformat(timespec="seconds"),
-            lux  = lux,
-            lamp = "(lamp-on)" if lamp_on_flag else "",
-            low  = LOW,
-            high = HIGH,
-        )
-    )
+def run_planner():
+    # 1) 运行 BFS 搜索
+    problem_file = "problem.pddl"
+    cmd = ["python3", "-m", "pyperplan", "-s", "bfs", "domain.pddl", problem_file]
+    out = subprocess.check_output(cmd, text=True, stderr=subprocess.STDOUT)
 
-def decide_and_act():
-    lux_now = get_current_luminance()
-    lamp_on_flag = lamp_is_on()
+    # 2) 先尝试读取  <problem.pddl>.soln
+    soln_path = Path("problem.pddl" + ".soln")   # --> problem.pddl.soln
+    actions = []
+    for line in soln_path.read_text().splitlines():
+        m = STEP_RE.search(line)      # 用 search，别用 match
+        if m:
+            actions.append(m.group(1).lower())
 
-    if LOW <= lux_now <= HIGH and lamp_on_flag == (lux_now < HIGH):
-        print(f"[{datetime.now():%H:%M:%S}] {lux_now:.1f} lux OK，跳过")
-        return
+    # 3) 若文件不存在，再从 stdout 里抓（给以后换 A*、GBF 等留后门）
+    if not actions:
+        for line in out.splitlines():
+            m = STEP_RE.search(line)
+            if m:
+                actions.append(m.group(1).lower())
 
-    build_problem(int(lux_now), lamp_on_flag)
+    return actions
 
-    result = subprocess.run(
-        [PLANNER, DOMAIN, PROBLEM,
-         "--search", "lazy_greedy([ff()], preferred=[ff()])"],
-        text=True, capture_output=True
-    )
-
-    actions = re.findall(r"^\s*\(([^)]+)\)", result.stdout, re.MULTILINE)
-    acts = [a.lower() for a in actions]
-
-    if "turn-on" in acts:
-        print(f"[{datetime.now():%H:%M:%S}] {lux_now:.1f} lux → 需要开灯")
-        lamp_on()
-    elif "turn-off" in acts:
-        print(f"[{datetime.now():%H:%M:%S}] {lux_now:.1f} lux → 需要关灯")
-        lamp_off()
-    else:
-        print(f"[{datetime.now():%H:%M:%S}] {lux_now:.1f} lux → 无动作")
-
-def main_loop():
-    while True:
-        try:
-            decide_and_act()
-        except Exception as e:
-            print(f"[ERR] {e}")
-        time.sleep(10)
 
 if __name__ == "__main__":
-    main_loop()
+    lux_now = 80
+    build_problem(lux_now)
+    actions = run_planner()
+    if "turn-on" in actions:
+        print(">>> 执行动作：开灯")
+    elif "turn-off" in actions:
+        print(">>> 执行动作：关灯")
+    else:
+        print(">>> 无需动作")

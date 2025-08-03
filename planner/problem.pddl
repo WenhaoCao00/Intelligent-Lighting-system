@@ -1,9 +1,5 @@
-(define (problem lighting-now)
-  (:domain smart-lighting)
-
-  (:init
-    (= (lum) 23)         
-  )
-
-  (:goal (>= (lum) 100))
+(define (problem light-problem)
+  (:domain light-control)
+  (:init (dark))
+  (:goal (lamp-on))
 )
