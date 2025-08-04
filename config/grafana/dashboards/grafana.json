@@ -167,7 +167,7 @@
             "type": "influxdb",
             "uid": "XXvZlWyHk"
           },
-          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -10m)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_10_min_kWh\"}) \r\n",
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -1h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      (r.topic == \"plugwise/status/plus\" or r.topic == \"plugwise/status/circle\")\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)           // W ➜ Wh\r\n  |> group()                      // 清掉 topic 等 key\r\n  |> sum()                        // plus + circle 相加\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n  |> rename(columns: {_value: \"Energy_in_1_hour_kWh\"})\r\n",
           "refId": "A"
         },
         {
@@ -176,7 +176,7 @@
             "uid": "XXvZlWyHk"
           },
           "hide": false,
-          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -1h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_1_hour_kWh\"}) \r\n",
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -3h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      (r.topic == \"plugwise/status/plus\" or r.topic == \"plugwise/status/circle\")\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)           // W ➜ Wh\r\n  |> group()                      // 清掉 topic 等 key\r\n  |> sum()                        // plus + circle 相加\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n  |> rename(columns: {_value: \"Energy_in_3_hour_kWh\"})\r\n",
           "refId": "B"
         },
         {
@@ -185,7 +185,7 @@
             "uid": "XXvZlWyHk"
           },
           "hide": false,
-          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -24h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      r.topic == \"plugwise/status/plus\"\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)              // Wh\r\n  |> sum()\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n|> group()                                 // 把所有 group key 清掉，避免 _start 等跟着显示\r\n|> rename(columns: {_value: \"Energy_in_24_hour_kWh\"}) \r\n",
+          "query": "from(bucket: \"zwave\")\r\n  |> range(start: -24h)\r\n  |> filter(fn: (r) =>\r\n      r._measurement == \"plugwise_power\" and\r\n      r._field == \"power\" and\r\n      (r.topic == \"plugwise/status/plus\" or r.topic == \"plugwise/status/circle\")\r\n  )\r\n  |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)\r\n  |> integral(unit: 1h)           // W ➜ Wh\r\n  |> group()                      // 清掉 topic 等 key\r\n  |> sum()                        // plus + circle 相加\r\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\r\n  |> rename(columns: {_value: \"Energy_in_24_hour_kWh\"})\r\n",
           "refId": "C"
         }
       ],
@@ -265,6 +265,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "9.0.4",
       "targets": [
         {
           "datasource": {
@@ -374,13 +375,13 @@
     "list": []
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Z-Wave Sensor Dashboard",
   "uid": "zwave-sensors",
-  "version": 8,
+  "version": 10,
   "weekStart": ""
 }

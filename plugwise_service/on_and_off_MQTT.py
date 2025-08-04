@@ -33,11 +33,11 @@ TOPIC_CIRCLE_ENERGY = "plugwise/status/circle"
 # Init Plugwise stick & devices
 stick        = Stick(DEFAULT_PORT)
 circle_plus  = Circle(PLUS_MAC, stick)
-# circle       = Circle(CIRCLE_MAC, stick)
+circle       = Circle(CIRCLE_MAC, stick)
 
 now = datetime.now()
 circle_plus.set_clock(now)
-# circle.set_clock(now)
+circle.set_clock(now)
 
 # ───────────────────────  Report Energy ─────────────────────────────
 def publish_energy(device: Circle, topic: str, name: str):
@@ -62,7 +62,7 @@ def publish_energy(device: Circle, topic: str, name: str):
 def energy_report_loop():
     while True:
         publish_energy(circle_plus,  TOPIC_PLUS_ENERGY,   "Circle+")
-        # publish_energy(circle,       TOPIC_CIRCLE_ENERGY, "Circle")
+        publish_energy(circle,       TOPIC_CIRCLE_ENERGY, "Circle")
         sleep(10)
 
 threading.Thread(target=energy_report_loop, daemon=True).start()
